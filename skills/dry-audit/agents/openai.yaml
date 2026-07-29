@@ -1,0 +1,4 @@
+interface:
+  display_name: "DRY Audit"
+  short_description: "Find and prioritize duplicated repository logic"
+  default_prompt: "Use $dry-audit to find duplicated logic in this repository and report prioritized consolidation opportunities."

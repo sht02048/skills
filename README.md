@@ -40,6 +40,7 @@ npx skills update --project
 ## 스킬
 
 - `commit`: staged-first 한국어 Git 커밋
+- `dry-audit`: 그래프 근거로 중복 책임을 찾아 P0-P3로 우선순위화
 - `pr`: 베이스 브랜치를 확인하고 GitHub PR 생성
 - `pr-review-diagnosis`: 현재 브랜치 PR 리뷰 진단
 - `llm-wiki-update`: 저장소 근거를 반영해 기존 `llm-wiki` 갱신
