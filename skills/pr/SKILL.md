@@ -66,8 +66,19 @@ When screenshots are warranted:
    focused image per reviewer question and avoid redundant captures, empty
    space, development overlays, secrets, or personal data.
 5. Upload images as GitHub user attachments without committing temporary
-   evidence. Add descriptive alt text and verify that the PR body renders each
-   attachment.
+   evidence:
+   - Prefer an already-installed `gh-image` or `gh-attach` extension. If an
+     extension must be installed, include that external change in the user's
+     confirmation.
+   - With `gh-image`, run
+     `gh image --repo <owner>/<repo> <screenshot-path>` and capture the returned
+     Markdown. Do not expose session tokens in arguments or logs.
+   - Replace the filename-only alt text with a concise description of what the
+     screenshot proves, then insert the Markdown into the PR body.
+6. After creating the PR, inspect its rendered body with
+   `gh pr view <number> --json body` and verify each attachment URL returns a
+   successful HTTP response. Remove temporary screenshots and PR body files,
+   then confirm they were not committed with `git status --short`.
 
 If no meaningful UI change exists, continue without asking about screenshots.
 
