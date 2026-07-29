@@ -1,0 +1,4 @@
+interface:
+  display_name: "PR Review Diagnosis"
+  short_description: "Assess which pull request reviews need action"
+  default_prompt: "Use $pr-review-diagnosis to assess reviews on the current branch pull request."
