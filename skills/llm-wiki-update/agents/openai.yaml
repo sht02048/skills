@@ -1,0 +1,4 @@
+interface:
+  display_name: "LLM Wiki Update"
+  short_description: "Refresh a repository llm-wiki from source evidence"
+  default_prompt: "Use $llm-wiki-update to refresh this repository llm-wiki from current source evidence."
