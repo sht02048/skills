@@ -43,22 +43,33 @@ and exact command instead of claiming publication succeeded.
 
 ## Visual evidence
 
-Request screenshots only when the diff changes rendered layout, styling,
-content hierarchy, interaction states, or a visual defect reviewers need to
-compare. Skip them for non-visual refactors, tests, docs, generated files,
-dependency changes, or configuration-only changes.
+Inspect the confirmed-base diff for meaningful user-visible UI changes. Request
+screenshots only when the diff changes rendered layout, styling, content
+hierarchy, interaction states, or a visual defect reviewers need to compare.
+Skip them for non-visual refactors, tests, docs, generated files, dependency or
+configuration changes, and copy-only changes without a review-relevant visual
+result.
 
-Before capturing or uploading anything:
+When screenshots are warranted:
 
-1. Propose the minimum useful views with route or component, state, viewport
-   when relevant, and what each image proves.
-2. Ask the user to select all, specific views, or skip. Combine this with base
-   confirmation when both are pending.
-3. Capture only approved views using non-sensitive data.
-4. Upload attachments without committing temporary evidence and verify that the
-   PR body renders them.
+1. Before starting a dev server, capturing, or uploading, propose a numbered
+   candidate list. For each candidate include:
+   - route or component;
+   - state to reproduce, such as default, populated, error, or open dialog;
+   - viewport when it matters;
+   - the changed behavior the image proves.
+2. Ask the user to select all candidates, specific numbers, or skip. Combine
+   this with base confirmation when both decisions are pending.
+3. Do not push or create the PR until every required decision is confirmed. An
+   explicit base confirms only the base, not the screenshot selection.
+4. Capture only the selected views using mock or non-sensitive data. Prefer one
+   focused image per reviewer question and avoid redundant captures, empty
+   space, development overlays, secrets, or personal data.
+5. Upload images as GitHub user attachments without committing temporary
+   evidence. Add descriptive alt text and verify that the PR body renders each
+   attachment.
 
-An explicit base confirms only the base, not screenshot upload.
+If no meaningful UI change exists, continue without asking about screenshots.
 
 ## Base decision rules
 

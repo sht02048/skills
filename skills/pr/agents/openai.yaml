@@ -1,4 +1,4 @@
 interface:
   display_name: "Pull Request"
-  short_description: "Create an intentional review-ready pull request"
-  default_prompt: "Use $pr to confirm the base branch and create a review-ready pull request."
+  short_description: "Create a PR with intentional base and visual evidence"
+  default_prompt: "Use $pr to confirm the base branch, propose relevant UI screenshots when needed, and create a review-ready pull request."
