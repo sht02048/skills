@@ -1,0 +1,4 @@
+interface:
+  display_name: "Commit"
+  short_description: "Create safe staged-first Korean Git commits"
+  default_prompt: "Use $commit to create focused Korean commits from the current repository changes."
