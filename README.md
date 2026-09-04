@@ -9,32 +9,20 @@ Node.js가 필요합니다. 설치 후 새 Codex 세션에서 사용할 수 있�
 ### 사용자 범위
 
 모든 프로젝트에서 사용하려면 전체 스킬을 Codex 사용자 범위에
-설치합니다.
+설치합니다. 최신 버전으로 갱신할 때도 같은 명령을 다시 실행합니다.
 
 ```bash
 npx skills add sht02048/skills --global --agent codex --skill '*' --yes
 ```
 
-설치된 스킬을 최신 버전으로 갱신하려면 다음 명령을 실행합니다.
-
-```bash
-npx skills update --global
-```
-
 ### 프로젝트 범위
 
 현재 프로젝트에서만 사용하려면 대상 프로젝트 루트에서 다음 명령을
-실행합니다. 스킬은 `.agents/skills`에 설치됩니다.
+실행합니다. 스킬은 `.agents/skills`에 설치됩니다. 최신 버전으로
+갱신할 때도 같은 명령을 다시 실행합니다.
 
 ```bash
 npx skills add sht02048/skills --agent codex --skill '*' --yes
-```
-
-프로젝트에 설치된 스킬을 최신 버전으로 갱신하려면 다음 명령을
-실행합니다.
-
-```bash
-npx skills update --project
 ```
 
 ## 스킬
