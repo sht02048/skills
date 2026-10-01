@@ -1,0 +1,14 @@
+{
+  "name": "sht02048-skills",
+  "description": "Minsug Chae의 개인 에이전트 스킬 모음",
+  "owner": {
+    "name": "Minsug Chae"
+  },
+  "plugins": [
+    {
+      "name": "skills",
+      "source": "./",
+      "description": "커밋, PR, PR 리뷰 진단, DRY 감사, Orca 오케스트레이션, llm-wiki 갱신을 위한 개인 스킬 모음"
+    }
+  ]
+}

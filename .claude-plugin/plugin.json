@@ -1,0 +1,9 @@
+{
+  "name": "skills",
+  "description": "커밋, PR, PR 리뷰 진단, DRY 감사, Orca 오케스트레이션, llm-wiki 갱신을 위한 개인 스킬 모음",
+  "version": "1.0.0",
+  "author": {
+    "name": "Minsug Chae"
+  },
+  "repository": "https://github.com/sht02048/skills"
+}
