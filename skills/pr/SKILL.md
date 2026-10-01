@@ -1,6 +1,6 @@
 ---
 name: pr
-description: Prepare and create a non-draft GitHub pull request by verifying the current branch, resolving or confirming the intended base, summarizing the actual diff, honoring the repository PR template, pushing, and opening the PR. Use when the user asks to create, open, push, or publish a pull request, or invokes `$pr`.
+description: Prepare and create a non-draft GitHub pull request by verifying the current branch, resolving or confirming the intended base, summarizing the actual diff, honoring the repository PR template, pushing, opening the PR, and then waiting for its checks and automatic Codex review to finish. Use when the user asks to create, open, push, or publish a pull request, or invokes `$pr`.
 ---
 
 # Pull Request
@@ -36,7 +36,8 @@ auto-commit work or invent repository conventions.
    with `gh pr create --base <base> --head <branch> --title <title>
    --body-file <file>`.
 9. Report the PR URL, base, head, pushed commit range, and remaining local
-   status.
+   status immediately, without waiting for checks.
+10. Follow "Wait for checks and review" for the created PR.
 
 If GitHub CLI is missing or unauthenticated, report the prepared title, body,
 and exact command instead of claiming publication succeeded.
@@ -81,6 +82,40 @@ When screenshots are warranted:
    then confirm they were not committed with `git status --short`.
 
 If no meaningful UI change exists, continue without asking about screenshots.
+
+## Wait for checks and review
+
+After reporting the PR, wait up to 10 minutes in total for the checks and the
+automatic Codex review of the PR's head SHA. Run the wait as a background task
+when the agent supports background commands that resume it on completion, so
+the conversation stays usable; otherwise wait in the foreground.
+
+Poll about every 30 seconds until both signals settle or 10 minutes pass:
+
+- Checks: `gh pr checks <number> --json bucket,name,state,link`. Checks are
+  settled when none is `pending`. If no check appears within the first minute,
+  treat the repository as having no checks.
+- Codex review: read reactions on the PR with
+  `gh api "repos/{owner}/{repo}/issues/<number>/reactions"` and reviews with
+  `gh api "repos/{owner}/{repo}/pulls/<number>/reviews"`, considering only the
+  Codex bot account. 👀 means the review is still running. 👍 means it finished
+  with no blocking finding. A submitted Codex review for the head SHA means it
+  finished with feedback to read. If no Codex signal appears within the first
+  minute, treat automatic review as not configured and stop waiting for it.
+
+Never post `@codex review`, rerun workflows, or otherwise trigger a check or
+review manually.
+
+When the wait ends:
+
+- Every check passed and Codex gave 👍 or is not configured: report the pass
+  with the head SHA.
+- Any check failed or was cancelled, or Codex submitted a review instead of
+  👍: follow the `pr-review-diagnosis` skill for this PR and report its
+  diagnosis. Do not edit files, commit, push, or reply on GitHub.
+- 10 minutes passed with something still unsettled: stop waiting, name what is
+  still pending, and do not report it as a pass. Still run the diagnosis if
+  something has already failed.
 
 ## Base decision rules
 
