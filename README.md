@@ -1,8 +1,8 @@
-# Codex Skills
+# Skills
 
-다른 저장소에서도 사용할 수 있는 개인 Codex 스킬 모음입니다.
+다른 저장소에서도 사용할 수 있는 개인 Codex · Claude Code 스킬 모음입니다.
 
-## 설치
+## Codex 설치
 
 Node.js가 필요합니다. 설치 후 새 Codex 세션에서 사용할 수 있습니다.
 
@@ -23,6 +23,36 @@ npx skills add sht02048/skills --global --agent codex --skill '*' --yes
 
 ```bash
 npx skills add sht02048/skills --agent codex --skill '*' --yes
+```
+
+## Claude Code 설치
+
+### 플러그인
+
+Claude Code에서 이 저장소를 마켓플레이스로 추가한 뒤 플러그인을
+설치합니다. 스킬은 `/skills:commit`처럼 플러그인 이름이 붙은 형태로
+호출합니다.
+
+```text
+/plugin marketplace add sht02048/skills
+/plugin install skills@sht02048-skills
+```
+
+최신 버전으로 갱신하려면 다음 명령을 실행합니다.
+
+```text
+/plugin marketplace update sht02048-skills
+```
+
+### 스킬만 설치
+
+`/commit`처럼 접두사 없이 호출하려면 스킬을 `~/.claude/skills`에 직접
+설치합니다. Node.js가 필요하며, 갱신할 때도 같은 명령을 다시
+실행합니다. 프로젝트 범위로 설치하려면 `--global`을 빼고 대상 프로젝트
+루트에서 실행합니다.
+
+```bash
+npx skills add sht02048/skills --global --agent claude-code --skill '*' --yes
 ```
 
 ## 스킬
