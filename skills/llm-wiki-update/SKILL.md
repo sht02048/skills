@@ -1,13 +1,13 @@
 ---
 name: llm-wiki-update
-description: Refresh a repository's tracked `llm-wiki` from current source, configuration, tests, documentation, and Git evidence while preserving local wiki conventions. Use when the user asks to update, refresh, sync, or maintain an existing `llm-wiki`, or invokes `$llm-wiki-update`.
+description: Refresh a repository's tracked `llm-wiki` from current source, configuration, tests, documentation, and Git evidence while preserving local wiki conventions. Use when the user asks to update, refresh, sync, or maintain an existing `llm-wiki`, says "위키 갱신" or "llm-wiki 업데이트", or invokes `$llm-wiki-update`.
 ---
 
 # LLM Wiki Update
 
-Keep an existing `llm-wiki/` aligned with the repository using concise,
-source-backed synthesis. If the repository has no `llm-wiki/`, stop and report
-that this skill updates existing wikis rather than inventing a new schema.
+Keep an existing `llm-wiki/` aligned with the repository using source-backed
+synthesis. If the repository has no `llm-wiki/`, stop and report that this
+skill updates existing wikis rather than inventing a new schema.
 
 ## Scope and safety
 
@@ -33,13 +33,15 @@ Resolve conflicts in this order:
 
 1. Inspect repository status, current branch, `llm-wiki/` structure, and its
    local instructions.
-2. Determine the requested evidence range. Prefer an explicit base or range.
-   Otherwise use upstream and remote-default evidence rather than assuming a
-   branch name. Include staged and unstaged diffs when local work is in scope.
+2. Determine the evidence range. Use an explicit base or range when the user
+   gives one. Otherwise use the commits from the last commit that touched
+   `llm-wiki/` (`git log -1 --format=%H -- llm-wiki`) through `HEAD`, plus
+   staged and unstaged changes; that range is exactly what the wiki has not yet
+   absorbed.
 3. Read only the source files needed to verify changed facts.
 4. Map facts into the wiki's existing information architecture. Update an
-   existing page before adding a new one. Add a page only when current pages
-   would become ambiguous or overly broad.
+   existing page before adding a new one. Add a page only when no existing page
+   owns the subsystem the fact describes.
 5. Preserve required page sections and citation style. Attach concrete
    repository paths to durable claims. Label inference and unresolved questions.
 6. Update the wiki catalog, index, chronology, or change log only when its local
@@ -56,10 +58,10 @@ Resolve conflicts in this order:
 
 Report in Korean:
 
+- evidence range used;
 - changed `llm-wiki/**` files;
 - repository evidence reflected;
 - validation commands and results;
 - remaining `Open question:` items or stale-data risks.
 
-Keep the report concise and do not claim code tests were run unless they were
-relevant and actually executed.
+Do not claim code tests were run unless they were actually executed.
