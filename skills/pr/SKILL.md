@@ -105,15 +105,17 @@ the conversation stays usable; otherwise wait in the foreground.
 Poll every 30 seconds until both signals settle or 10 minutes pass:
 
 - Checks: `gh pr checks <number> --json bucket,name,state,link`. Checks are
-  settled when none is `pending`. If no check appears within the first minute,
-  treat the repository as having no checks.
+  settled when none is `pending`. If no check appears within the first two
+  minutes, treat the repository as having no checks; CI often registers its
+  checks a minute or more after the PR opens.
 - Codex review: read reactions on the PR with
   `gh api "repos/{owner}/{repo}/issues/<number>/reactions"` and reviews with
   `gh api "repos/{owner}/{repo}/pulls/<number>/reviews"`, considering only the
   Codex bot account. 👀 means the review is still running. 👍 means it finished
   with no blocking finding. A submitted Codex review for the head SHA means it
   finished with feedback to read. If no Codex signal appears within the first
-  minute, treat automatic review as not configured and stop waiting for it.
+  two minutes, treat automatic review as not configured and stop waiting for
+  it.
 
 Never post `@codex review`, rerun workflows, or otherwise trigger a check or
 review manually; opening the PR already starts the configured automation, and a
@@ -121,8 +123,11 @@ manual trigger duplicates it.
 
 When the wait ends:
 
-- Every check passed and Codex gave 👍 or is not configured: report the pass
-  with the head SHA.
+- No check exists and Codex is not configured: report `검증 신호 없음` with
+  the head SHA, stating that no automated verification ran. Never call this a
+  pass; nothing was verified.
+- Otherwise, every existing check passed and Codex gave 👍 or is not
+  configured: report the pass with the head SHA.
 - Any check failed or was cancelled, or Codex submitted a review instead of
   👍: follow the `pr-review-diagnosis` skill for this PR and report its
   diagnosis. Do not edit files, commit, push, or reply on GitHub.
