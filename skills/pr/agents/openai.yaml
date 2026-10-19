@@ -1,4 +1,4 @@
 interface:
   display_name: "PR"
-  short_description: "Create a PR with intentional base and visual evidence"
+  short_description: "Create a PR, then wait for CI and Codex review"
   default_prompt: "Use $pr to confirm the base branch, propose relevant UI screenshots when needed, and create a review-ready pull request."
