@@ -1,12 +1,21 @@
 ---
 name: commit
-description: Create focused Git commits from the current repository changes using a staged-first policy, concern-based splitting, and Korean gitmoji commit messages. Use when the user asks to commit, split changes into commits, or invokes `$commit`.
+description: Create focused Git commits from the current repository changes using a staged-first policy, concern-based splitting, and Korean gitmoji commit messages. Use when the user asks to commit, split changes into commits, says "커밋", "커밋해줘", or "나눠서 커밋", or invokes `$commit`.
 ---
 
 # Commit
 
-Create safe, reviewable commits from repository evidence. Never commit, stage,
-unstage, or rewrite more than the user authorized.
+Never commit, stage, unstage, or rewrite more than the user authorized.
+
+## Hard constraints
+
+- Never run `git add .`, `git add -A`, `git commit -a`, or `git commit <path>`
+  unless every visible change belongs to the same commit; they sweep in
+  unrelated hunks, untracked files, and secrets, and break partial staging.
+- Never stage files that look like secrets (`.env*`, `*.pem`, `*.key`,
+  credential or token files). List them in the report instead.
+- When a hook fails, report its output and stop. Never pass `--no-verify`; it
+  skips the repository's own quality gates.
 
 ## Preserve an existing staged snapshot
 
@@ -23,27 +32,26 @@ restore, or otherwise change the snapshot unless the user explicitly requests
 that change. If validation finds a problem, report it instead of repairing the
 staged content.
 
-Commit only the staged snapshot. Preserve partial staging when staged and
-unstaged changes coexist in one file.
+Commit only the staged snapshot, even when it exceeds the split trigger below.
+In that case, commit it as one and report its size with a suggested split.
 
 ## Build commits when nothing is staged
 
 1. Inspect tracked and untracked changes with `git status --short`, `git diff`,
    and `git ls-files --others --exclude-standard`.
 2. Group files by one reviewer-visible concern.
-3. Stage each group with explicit pathspecs. Avoid `git add .` unless every
-   visible change belongs to the same commit.
+3. Stage each group with explicit pathspecs.
 4. Inspect the staged diff before committing.
 5. Re-run `git status --short` after every commit.
 
-Split documentation, tooling, refactors, behavior changes, and unrelated
-application areas when they can stand alone. Keep tests with the behavior they
-protect. Keep one commit when splitting would create broken or misleading
-intermediate states.
+Split a group into its own commit when it is correct without the other groups
+and its subject can be written without `및` or `and`. Keep tests with the
+behavior they protect so each commit passes on its own and reverts cleanly.
+Keep one commit when splitting would create broken or misleading intermediate
+states.
 
-Treat more than 20 files, roughly 500 changed lines, or three unrelated
-top-level areas as a review trigger. Derive smaller coherent slices before
-committing unless the user explicitly asks to preserve the staged snapshot.
+Treat 20 or more files, 500 or more changed lines, or three unrelated top-level
+areas as a split trigger. Derive smaller coherent slices before committing.
 
 If there are no changes, report that there is nothing to commit.
 
@@ -55,10 +63,16 @@ Use this subject format:
 <emoji> <type>: <Korean action-noun title>
 ```
 
-Keep the title concise and concrete. Prefer nouns such as `구현`, `정리`,
-`추가`, `수정`, `삭제`, `기록`, `분리`, `개선`, `갱신`, or `보강`. Write a
-Korean body only when it adds useful context. Preserve repository-required
-trailers exactly.
+Keep the Korean title at 30 characters or fewer and end it with an action
+noun such as `구현`, `정리`, `추가`, `수정`, `삭제`, `기록`, `분리`, `개선`,
+`갱신`, or `보강`.
+
+- Bad: `✨ feat: 로그인 기능을 추가했습니다`
+- Good: `✨ feat: 로그인 폼 검증 추가`
+
+Write a Korean body only when the reason for the change is not visible in the
+diff, the commit contains a breaking change, or files were grouped for a
+non-obvious reason. Preserve repository-required trailers exactly.
 
 Use this mapping:
 
@@ -73,8 +87,13 @@ Use this mapping:
 - `🔧 config`: 프로젝트 또는 환경 설정 변경
 - `🎸 chore`: 그 밖의 유지보수 작업
 
+When a commit spans several types, pick by precedence `fix` > `feat` >
+`refactor` > the rest; tests and docs inside a behavior commit do not change
+its type. A change to agent instructions such as `SKILL.md` is `feat` when it
+changes agent behavior and `docs` when it changes wording or names only.
+
 ## Report
 
-Report each commit hash and subject plus any remaining working-tree changes. If
-the staged-first path was used, explicitly state that unstaged changes were left
-untouched.
+Report each commit hash and subject plus any remaining working-tree changes and
+skipped secret-like files. If the staged-first path was used, explicitly state
+that unstaged changes were left untouched.
