@@ -1,0 +1,4 @@
+interface:
+  display_name: "Skill Refine"
+  short_description: "Audit and tighten an existing agent skill"
+  default_prompt: "Use $skill-refine to analyze this skill and rewrite it to be strict, focused, and reasoned."
