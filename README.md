@@ -63,4 +63,5 @@ npx skills add sht02048/skills --global --agent claude-code --skill '*' --yes
 - `pr`: 베이스 브랜치를 확인하고 GitHub PR 생성 후 CI·Codex 리뷰 대기
 - `pr-review-diagnosis`: 현재 브랜치 PR 리뷰 및 액션 실패 진단
 - `llm-wiki-update`: 저장소 근거를 반영해 기존 `llm-wiki` 갱신
+- `onboard`: 새 레포를 근거 기반으로 브리핑하고 구조 다이어그램·후속 질문으로 이해 확장
 - `skill-refine`: 기존 스킬을 분석해 엄격하고 근거 있는 형태로 개선
