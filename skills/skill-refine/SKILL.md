@@ -1,6 +1,6 @@
 ---
 name: skill-refine
-description: Audit an existing agent skill (`SKILL.md` and its bundled files) for vague rules, missing reasoning, filler, weak triggers, and mixed responsibilities, then rewrite it to be strict, focused, and reasoned while preserving the author's intent. Use when the user asks to analyze, review, critique, tighten, improve, or refactor a skill, asks why a skill behaves inconsistently, or invokes `$skill-refine`.
+description: Audit an existing agent skill (`SKILL.md` and its bundled files) for vague rules, missing reasoning, filler, weak triggers, and mixed responsibilities, then rewrite it to be strict, focused, and reasoned while preserving the author's intent. Use when the user asks to analyze, review, critique, tighten, improve, or refactor a skill, asks why a skill behaves inconsistently, says "스킬 분석", "스킬 개선", or "스킬 검사", or invokes `$skill-refine`.
 ---
 
 # Skill Refine
@@ -13,6 +13,8 @@ does? Rewrite the skill so the answer is yes for every line that remains.
 
 1. Resolve the target skill directory. If the user names none and the current
    repository has exactly one changed `SKILL.md`, use it; otherwise ask.
+   Edit the skill's source repository, never an installed copy such as a
+   plugin cache, because the next install or update overwrites it.
 2. Read the full `SKILL.md`, every file it references, and sibling metadata
    such as `agents/openai.yaml`. Never edit a file you have not read.
 3. Read repository instructions and two sibling skills when they exist. Match
@@ -85,7 +87,8 @@ End with the line count of `SKILL.md` and the count of findings per item.
    reasons the source does not support; a fabricated number is stricter but
    wrong. When a vague rule needs a value only the author knows, collect those
    rules and ask once with `AskUserQuestion`, offering 2-4 concrete candidates
-   per rule. If the user declines, keep the rule and mark it in the report as
+   per rule. When refining several skills, analyze all of them first and ask
+   every open decision in one round. If the user declines, keep the rule and mark it in the report as
    unresolved.
 2. Apply findings in this order: trigger, focus, strictness, reasoning,
    weight, line economy, decision process, examples, structure. Earlier fixes
