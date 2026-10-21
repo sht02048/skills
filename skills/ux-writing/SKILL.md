@@ -1,9 +1,9 @@
 ---
-name: toss-ux-writing
+name: ux-writing
 description: Write, rewrite, or review Korean UI copy by Toss (토스) UX writing rules — 해요체, active voice, positive framing, casual honorifics, no noun stacking, weed cutting, predictable CTAs, and Toss's error-message principles — and report every change as a Before/After table with the rule applied. Use whenever the user wants Korean product copy improved or written: a single phrase such as "예약" or "결제가 완료되었습니다", button labels, toasts, dialogs, error messages, push notifications, empty states, UI strings inside React/TSX/i18n files, or copy for a described screen. Triggers on "토스 스타일로", "토스처럼", "UX 라이팅", "문구 다듬어줘", "문구 바꿔줘", "버튼 문구", "에러 메시지 써줘", "카피 검수", "마이크로카피", "해요체로", and on any request to make Korean UI text clearer or friendlier, even when Toss is not named.
 ---
 
-# Toss UX Writing
+# UX Writing
 
 Toss writes for people who scan, not read. Every rule below serves that: say
 the one thing the user needs, in words they would say out loud, so they know

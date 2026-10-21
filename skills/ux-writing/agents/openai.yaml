@@ -1,4 +1,4 @@
 interface:
-  display_name: "Toss UX Writing"
+  display_name: "UX Writing"
   short_description: "Write or review Korean UI copy by Toss UX writing rules"
-  default_prompt: "Use $toss-ux-writing to rewrite this Korean UI copy by Toss's UX writing rules and show a Before/After table."
+  default_prompt: "Use $ux-writing to rewrite this Korean UI copy by Toss's UX writing rules and show a Before/After table."

@@ -65,4 +65,4 @@ npx skills add sht02048/skills --global --agent claude-code --skill '*' --yes
 - `llm-wiki-update`: 저장소 근거를 반영해 기존 `llm-wiki` 갱신
 - `onboard`: 새 레포를 근거 기반으로 브리핑하고 구조 다이어그램·후속 질문으로 이해 확장
 - `skill-refine`: 기존 스킬을 분석해 엄격하고 근거 있는 형태로 개선
-- `toss-ux-writing`: 토스 UX 라이팅 원칙으로 한국어 UI 문구를 쓰고 고친 뒤 Before/After 표로 정리
+- `ux-writing`: 토스 UX 라이팅 원칙으로 한국어 UI 문구를 쓰고 고친 뒤 Before/After 표로 정리
