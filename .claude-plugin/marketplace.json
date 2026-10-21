@@ -8,7 +8,7 @@
     {
       "name": "skills",
       "source": "./",
-      "description": "커밋, PR, PR 리뷰 진단, DRY 감사, Orca 오케스트레이션, llm-wiki 갱신, 스킬 개선, 레포 온보딩을 위한 개인 스킬 모음"
+      "description": "커밋, PR, PR 리뷰 진단, DRY 감사, Orca 오케스트레이션, llm-wiki 갱신, 스킬 개선, 레포 온보딩, 토스 UX 라이팅을 위한 개인 스킬 모음"
     }
   ]
 }
