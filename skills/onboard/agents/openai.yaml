@@ -2,3 +2,5 @@ interface:
   display_name: "Onboard"
   short_description: "Brief an unfamiliar repository and answer follow-ups"
   default_prompt: "Use $onboard to brief me on this repository and help me explore it through follow-up questions."
+policy:
+  allow_implicit_invocation: false

@@ -1,6 +1,7 @@
 ---
 name: onboard
 description: Brief a newcomer on an unfamiliar repository from repository evidence — purpose, stack, commands, structure, conventions, and pitfalls — optionally render a project-structure diagram with the `diagram-design` skill (installing it when missing), then deepen understanding through follow-up questions. Use when the user starts work in a new or unfamiliar repository, asks for onboarding, a repository overview, or how a codebase is organized, says "온보딩", "이 레포 설명해줘", or "프로젝트 구조 알려줘", or invokes `$onboard`.
+disable-model-invocation: true
 ---
 
 # Onboard
