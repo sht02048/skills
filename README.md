@@ -59,7 +59,13 @@ npx skills add sht02048/skills --global --agent claude-code --skill '*' --yes
 
 - `commit`: staged-first 한국어 Git 커밋
 - `dry-audit`: 그래프 근거로 중복 책임을 찾아 P0-P3로 우선순위화
-- `orca-orchestration`: Orca worktree 기반 구현과 PR 병합 게이트 조율
+- `orca-orchestration`: 티켓마다 Orca 워커 워크트리를 만들어 구현을 맡기고,
+  React Doctor와 자동 Codex 리뷰 게이트를 통과한 PR만 머지한 뒤 워크트리를
+  깨끗하게 정리. `grill-me → to-spec → to-tickets → implement-spec` 흐름의
+  마지막 단계에서 티켓을 병렬로 구현할 때 주로 쓰지만 그 흐름에 한정되지는
+  않음. Orca CLI 조작은 설치된 `orchestration` 스킬에 위임하므로 Orca가
+  실행 중이어야 함. 머지된 워크트리의 사본·빌드 산출물·프로세스를 남기면
+  디스크가 가득 차는 사고(2026-11-07)가 있었기 때문에 종료 정리를 필수로 둠
 - `pr`: 베이스 브랜치를 확인하고 GitHub PR 생성 후 CI·Codex 리뷰 대기
 - `pr-review-diagnosis`: 현재 브랜치 PR 리뷰 및 액션 실패 진단
 - `llm-wiki-update`: 저장소 근거를 반영해 기존 `llm-wiki` 갱신
