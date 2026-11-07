@@ -8,12 +8,35 @@ description: Coordinate a requirement or ticket from an isolated Orca worktree t
 Run the delivery through Orca's tracked worktree and orchestration state. The
 coordinator directs workers and decides gates; it never edits code.
 
+This skill defines the delivery policy only. How to drive Orca (starting
+workers, messaging, being woken, recovery) comes from the installed
+`orchestration` skill, which loads a guide matched to the Orca binary in use.
+
+## Load the Orca Guide First
+
+1. Load the installed `orchestration` skill and follow its instructions to
+   resolve the Orca executable for this session.
+2. Run `ORCA skills get orchestration` (with the resolved executable) and read
+   the guide before issuing any Orca command. Fetch it once per session.
+3. Follow the guide for every Orca mechanic: starting a worker, choosing its
+   workspace, sending and replying to messages, handling wake-ups, and
+   recovering a failed or stalled worker. Never reconstruct Orca commands from
+   memory or from this file.
+4. If the installed skill is missing or `skills get` fails, stop and report
+   the exact error to the user. Do not fall back to a non-Orca subagent tool.
+
+Where this file and the Orca guide disagree on how to operate Orca, the Orca
+guide wins. Where they disagree on what to deliver and when to merge, this
+file wins.
+
 ## Non-Negotiable Ownership
 
-- Create a dedicated Orca worktree for every requirement or ticket. Isolation
-  keeps worker changes out of the coordinator checkout.
-- Use Orca orchestration tasks and injected dispatches. A terminal prompt
-  without a tracked task is not orchestration.
+- Give every requirement or ticket its own Orca worker workspace. Let the
+  worker start create it, as the Orca guide describes; do not reuse the
+  coordinator checkout for worker edits.
+- Only tracked Orca workers count as orchestration. A terminal prompt without
+  an Orca Task and Dispatch is not orchestration, and must never be described
+  as such.
 - Assign all repository mutations to workers: code, tests, generated files,
   formatting, commits, pushes, PR creation, and review fixes.
 - Never let the coordinator run an editor, `apply_patch`, a formatter that
@@ -21,30 +44,21 @@ coordinator directs workers and decides gates; it never edits code.
   coordinator may inspect state, issue Orca/GitHub control commands, make
   decisions, and merge.
 - Keep one explicit owner per file or responsibility when multiple workers run.
-  Shared worktrees make overlapping edits unsafe.
+  Shared workspaces make overlapping edits unsafe.
 
 ## Delivery Flow
 
-### 1. Establish the Worktree
+### 1. Start the Worker
 
-1. Confirm Orca is running with `orca status --json`.
-2. Decide lineage separately from the Git base:
-   - Independent ticket: use `--no-parent` and the repository default base.
-   - Stacked ticket: replace `--no-parent` with an explicit parent or base only
-     when the user requested that dependency.
-3. Create the worktree with an agent in its first terminal:
+Start one worker per independent ticket with a self-contained task spec (see
+step 2). Independent tickets get a new top-level workspace from the repository
+default base. Stack a ticket on a parent or non-default base only when the
+user asked for that dependency. Then end the turn and let Orca wake the
+coordinator, as the guide requires.
 
-```bash
-orca worktree create --name <ticket>-<slug> --no-parent --agent codex --json
-orca terminal wait --terminal <startupTerminal.handle> --for tui-idle --timeout-ms 60000 --json
-```
+### 2. Write the Task Spec
 
-Keep the full returned worktree ID and the single live terminal handle. Do not
-create a duplicate agent terminal.
-
-### 2. Dispatch the Work
-
-Create a task whose specification includes:
+The worker's spec must include:
 
 - the exact requirement or ticket source;
 - repository instructions and scope boundaries;
@@ -55,30 +69,16 @@ Create a task whose specification includes:
 - a final report containing the PR URL, exact head SHA, checks run, the React
   Doctor command and result for that SHA, and unresolved risks.
 
-```bash
-orca orchestration task-create --spec "<complete worker task>" --json
-orca orchestration dispatch --task <task_id> --to <startupTerminal.handle> --inject --json
-orca orchestration dispatch-show --task <task_id> --json
-```
-
-The last command proves that orchestration provenance exists. Never describe
-untracked work as orchestrated.
-
 ### 3. Supervise Without Editing
 
-Wait on lifecycle messages instead of repeatedly reading terminal output:
-
-```bash
-orca orchestration check --wait --types worker_done,escalation,decision_gate --timeout-ms 900000 --json
-```
-
-- Answer worker questions with evidence and judgment.
-- On a defect or failed gate, dispatch the correction to a worker. The
-  coordinator must not patch it.
-- Treat a timeout as a checkpoint, not failure. Check task and terminal
-  liveness and whether terminal output grew since the last checkpoint. Keep
-  waiting while the worker is alive and progressing. After two consecutive
-  timeouts with no new output, stop and report the stalled state to the user.
+- Act on each message Orca wakes the coordinator with. Answer worker
+  questions with evidence and judgment; ask the user when the answer does not
+  follow from the ticket or their instructions.
+- On a defect or failed gate, send the correction to a worker. The coordinator
+  must not patch it.
+- Silence or a timeout alone never proves the worker exited. Use the Orca
+  guide's liveness and recovery steps. If the worker appears stalled and the
+  guide's steps do not restore progress, report the stalled state to the user.
 - Stop immediately when the user says to stop.
 
 ### 4. Evaluate the Pull Request
@@ -90,7 +90,7 @@ Minimum merge gates:
 
 1. The worker's report shows React Doctor completed successfully for the
    current head SHA. A result for another SHA, or no reported command, is not a
-   pass; dispatch a rerun.
+   pass; send a rerun to the worker.
 2. The automatic Codex PR review completed and passed for the current head SHA.
 
 Interpret the automatic Codex review on the PR:
@@ -103,8 +103,8 @@ Neither 👀 nor 👍 on the automatic review item → Codex posted a separate r
 
 - A separate Codex review is a pass only when it reports no blocking issue for
   the current head SHA. The absence of reactions alone is never a pass. If the
-  review contains findings, dispatch fixes to a worker and wait for the
-  automatic review of the new SHA.
+  review contains findings, send fixes to a worker and wait for the automatic
+  review of the new SHA.
 - Never post `@codex review`, call a review-triggering API, or otherwise start
   Codex review manually. Opening or updating the PR starts the configured
   automatic review.
@@ -130,15 +130,15 @@ Is the PR head SHA unchanged since validation?
     ├── Automatic Codex review passed?
     │   └── No or still 👀 → do not merge
     ├── Any required CI failure, unresolved finding, conflict, unmet requirement, or material risk?
-    │   └── Yes → do not merge; dispatch a fix or report the blocker
+    │   └── Yes → do not merge; send a fix to a worker or report the blocker
     └── No → the coordinator may merge
 ```
 
 Passing the minimum gates permits merge consideration; it never forces a merge.
 
 Merge with `gh pr merge <number> --squash --delete-branch`. Leave the Orca
-worktree in place.
+worker workspace in place.
 
-After merging, verify the PR state and merge commit. Report the worktree, PR,
+After merging, verify the PR state and merge commit. Report the workspace, PR,
 merged or withheld decision, exact SHA, React Doctor result, Codex review
 signal, and any remaining risk.
