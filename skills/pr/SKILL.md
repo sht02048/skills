@@ -82,6 +82,7 @@ need no entry.
 ```json
 {
   "version": 1,
+  "waitMinutes": 10,
   "gates": [
     { "type": "command", "name": "React Doctor", "run": "npx -y react-doctor@latest . --yes" },
     { "type": "command", "name": "Tests", "run": "pnpm test" },
@@ -102,8 +103,12 @@ need no entry.
 | `agent-review` | `name`, `instructions`, optional `reviewer` | An independent agent reviews `<base>...HEAD` at the head SHA against `instructions` and reports no blocking finding |
 | `codex-auto-review` | none | The automatic Codex review finishes with 👍 for the head SHA |
 
+`waitMinutes` is optional: how long "Wait for checks and review" waits, a
+whole number of minutes from 1 to 30. Without it, wait 10 minutes.
+
 An empty `gates` list is valid: only CI checks count. The file is invalid when
-`version` is not `1`, `gates` is missing, a gate has an unknown `type`, a
+`version` is not `1`, `gates` is missing, `waitMinutes` is present but not a
+whole number from 1 to 30, a gate has an unknown `type`, a
 `command` gate lacks `name` or `run`, or an `agent-review` gate lacks `name`
 or `instructions`. Never guess a repair.
 
@@ -127,7 +132,7 @@ Resolve the gate set in this order:
      as `test`, `lint`, or `typecheck` in `package.json`, or the equivalents
      in its build tool.
 4. Ask with the host's structured question tool (AskUserQuestion in Claude
-   Code; otherwise one message with numbered options). Ask two questions
+   Code; otherwise one message with numbered options). Ask these questions
    together, combined with base confirmation when that is also pending:
    - Which gates to use (multi-select): React Doctor, the automatic Codex
      review, a project verification command, and an independent agent
@@ -140,6 +145,10 @@ Resolve the gate set in this order:
    - When an independent agent review is selected without criteria, use
      "Find correctness bugs, security issues, and unmet requirements. Ignore
      style." and leave `reviewer` unset.
+   - How long to wait for checks and the Codex review: 10 minutes
+     (recommended), 20 minutes, or 30 minutes. A free-form answer must be a
+     whole number of minutes from 1 to 30; cap a longer one at 30 and say
+     so. Save 10 by omitting `waitMinutes`.
    - Whether to save the choice as project configuration (recommended) or use
      it for this run only.
 5. To save, write `.agents/pr-gates.json` after the PR is created so it does
@@ -157,10 +166,11 @@ issues the PR introduces.
 
 ## Change the gates
 
-When the user asks to add, remove, or change a gate, read the current
-`.agents/pr-gates.json` (or start from `{"version": 1, "gates": []}`), map the
-request to a gate as in "Merge gates", show the resulting JSON, and write it
-after the user confirms. Validate it against the rules above. Report it as an
+When the user asks to add, remove, or change a gate or the wait time, read
+the current `.agents/pr-gates.json` (or start from
+`{"version": 1, "gates": []}`), map the request to a gate or a `waitMinutes`
+value as in "Merge gates", show the resulting JSON, and write it after the
+user confirms. Validate it against the rules above. Report it as an
 uncommitted file for the user to commit; do not commit it implicitly. A caller
 that forbids file edits (the Orca coordinator) has a worker make the change.
 
@@ -248,13 +258,18 @@ When screenshots are warranted:
 
 ## Wait for checks and review
 
-After reporting the PR, wait up to 10 minutes in total for the checks and,
+After reporting the PR, wait up to the wait time in total for the checks and,
 when `codex-auto-review` is a gate, the automatic Codex review of the PR's head
 SHA. Run the wait as a background task when the agent supports background
 commands that resume it on completion, so the conversation stays usable;
 otherwise wait in the foreground.
 
-Poll every 30 seconds until every signal settles or 10 minutes pass:
+The wait time is, in order: a time the user or the calling task names for this
+run, then `waitMinutes` from the resolved gate set, then 10 minutes. It is
+never more than 30 minutes; cap a longer request at 30 and say so. Name the
+wait time in the report.
+
+Poll every 30 seconds until every signal settles or the wait time passes:
 
 - Checks: `gh pr checks <number> --json bucket,name,state,link`. Checks are
   settled when none is `pending`. If no check appears within the first two
@@ -287,7 +302,7 @@ URL, head SHA, and each gate's result, using exactly one of these:
   gate could not run, or Codex submitted a review instead of 👍. Follow the `pr-review-diagnosis` skill for this PR
   and report its diagnosis. Do not edit files, commit, push, or reply on
   GitHub.
-- `미완료`: 10 minutes passed with something still unsettled. Name what is
+- `미완료`: the wait time passed with something still unsettled. Name what is
   still pending. If something has already failed, report `실패` instead.
 - `검증 신호 없음`: the gate set is empty and no check exists. State that no
   automated verification ran. Never call this a pass; nothing was verified.
