@@ -42,9 +42,20 @@ required confirmation is resolved.
 9. Read `.github/PULL_REQUEST_TEMPLATE.md` or other repository-local PR
    templates when present. Preserve their headings and follow repository
    language and formatting conventions. Without a template or convention, write
-   a Korean title and a Korean body with exactly `## 요약` and `## 검증`
-   sections; `## 검증` states what was run, including each local gate and
-   its result, and what was not.
+   a Korean title and a Korean body with exactly these sections, in order:
+   - `## 배경`: the ticket link and its requirement in one or two lines when
+     a ticket exists, and the problem this PR solves.
+   - `## 요약`: the changed behavior, taken from the diff and described by
+     behavior rather than as a file list.
+   - `## 결정`: the approach chosen, the alternatives dropped, and why;
+     include judgment calls the ticket did not specify.
+   - `## 범위 밖 · 남은 위험`: what was deliberately left untouched, known
+     limitations, and candidate follow-up tickets.
+   - `## 검증`: what was run, including each local gate and its result, and
+     what was not, naming the commit SHA the results apply to.
+
+   Read `references/body.md` before writing this body; it holds good and bad
+   examples per section and a full example.
 10. Write a one-line title that states the change, not the branch name. If the
     branch contains a ticket key such as `ABC-123`, prefix the title with
     `[ABC-123]`; otherwise omit a ticket prefix. Do not invent one.
