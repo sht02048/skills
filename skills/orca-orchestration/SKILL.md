@@ -1,6 +1,6 @@
 ---
 name: orca-orchestration
-description: Coordinate one or more tickets from isolated Orca worker worktrees through implementation, validation, pull request, merge judgment, and clean teardown of the finished worktree. Use when the user asks to process tickets or a feature with Orca orchestration, to implement tickets in parallel across worktrees, to keep the coordinator code-free, or to merge only after React Doctor and the automatic Codex PR review pass; or says "오르카로 처리", "Orca 워크트리", "티켓 병렬로 구현". Typical entry point is the last step of the grill-me → to-spec → to-tickets → implement-spec workflow, when tickets exist and need delegated implementation, but any ticket-shaped work qualifies. Do not use it just to run a one-off Orca worker and get a result back; the installed `orchestration` skill covers that.
+description: Coordinate one or more tickets from isolated Orca worker worktrees through implementation, validation, pull request, merge judgment, and clean teardown of the finished worktree. Workers open and verify each PR with the `pr` skill, whose verdict for the head SHA (project gates in `.agents/pr-gates.json`, CI, the automatic Codex review) is the merge floor. Use when the user asks to process tickets or a feature with Orca orchestration, to implement tickets in parallel across worktrees, to keep the coordinator code-free, or to merge only after the project's checks pass; or says "오르카로 처리", "Orca 워크트리", "티켓 병렬로 구현". Typical entry point is the last step of the grill-me → to-spec → to-tickets → implement-spec workflow, when tickets exist and need delegated implementation, but any ticket-shaped work qualifies. Do not use it just to run a one-off Orca worker and get a result back; the installed `orchestration` skill covers that.
 ---
 
 # Orca Orchestration
@@ -35,6 +35,26 @@ Where this file and the Orca guide disagree on how to operate Orca, the Orca
 guide wins. Where they disagree on what to deliver and when to merge, this
 file wins.
 
+## Resolve the Merge Gates
+
+The `pr` skill owns PR verification: which gates a project uses, how to run
+them, how to read CI and the automatic Codex review, and the verdict for a
+head SHA. This skill never restates those rules; it consumes the verdict.
+
+1. Load the `pr` skill. If it is missing, stop and report it; do not
+   verify PRs from memory.
+2. Before starting any worker, resolve the gate set by following the `pr`
+   skill's "Merge gates" section: read `.agents/pr-gates.json`, or inspect the
+   repository and ask the user. Resolving it once here keeps parallel workers
+   from each stopping to ask the same question.
+3. Put the resolved gate set in every task spec so workers use it without
+   asking.
+4. If the user chose to save it, do not write the file yourself; it is a
+   repository mutation. Start a dedicated config worker whose task spec
+   contains the exact JSON for `.agents/pr-gates.json`, and treat its PR like
+   any ticket PR. Apply the gate set to the current run immediately rather
+   than waiting for that PR to merge.
+
 ## Non-Negotiable Ownership
 
 - Give every requirement or ticket its own Orca worker workspace. Let the
@@ -44,7 +64,8 @@ file wins.
   an Orca Task and Dispatch is not orchestration, and must never be described
   as such.
 - Assign all repository mutations to workers: code, tests, generated files,
-  formatting, commits, pushes, PR creation, and review fixes.
+  formatting, configuration files including `.agents/pr-gates.json`,
+  commits, pushes, PR creation, and review fixes.
 - Never let the coordinator run an editor, `apply_patch`, a formatter that
   writes files, `git commit`, or any equivalent code-changing command. The
   coordinator may inspect state, issue Orca/GitHub control commands, make
@@ -75,14 +96,17 @@ The worker's spec must include:
 - repository instructions and scope boundaries;
 - worker ownership of every code change;
 - required tests and observable QA;
-- running React Doctor on the final head SHA;
-- commit, push, and PR creation;
+- commit, then push and PR creation with the `pr` skill, given the resolved
+  gate set, the confirmed base branch, and which screenshot views to capture
+  (or that none are needed), so the worker never stops on a question the
+  coordinator already settled; after any later commit (a review fix, for example), rerun the
+  `pr` skill so it re-verifies the existing PR for the new head SHA;
 - cleanup of the worker's own temporary state before it reports: scratchpad
   repository copies, build output, and any dev server or daemon it started,
   keeping only reports and tools another ticket needs (see step 6 for why);
-- a final report containing the PR URL, exact head SHA, checks run, the React
-  Doctor command and result for that SHA, what was cleaned up and what was
-  intentionally kept for hand-off, and unresolved risks.
+- a final report containing the `pr` skill's verdict report (PR URL, head
+  SHA, verdict, each gate's result), other checks run, what was cleaned up
+  and what was intentionally kept for hand-off, and unresolved risks.
 
 ### 3. Supervise Without Editing
 
@@ -101,36 +125,33 @@ The worker's spec must include:
 Bind every decision to the PR's current head SHA. A pass for an older SHA is
 stale after any new commit.
 
-Minimum merge gates:
+The merge floor is the `pr` skill's verdict `통과` for the PR's current head
+SHA. Confirm the SHA with `gh pr view <number> --json headRefOid`; do not
+re-derive gate results yourself.
 
-1. The worker's report shows React Doctor completed successfully for the
-   current head SHA. A result for another SHA, or no reported command, is not a
-   pass; send a rerun to the worker.
-2. The automatic Codex PR review completed and passed for the current head SHA.
+- `통과` for an older SHA, or no verdict: send the worker to rerun the `pr`
+  skill for the current head.
+- A local gate (`command` or `agent-review`) failed before push, so no PR or
+  verdict exists: send the fix to the worker. Rerunning `pr` without a fix
+  fails the same way.
+- An `agent-review` gate names a `reviewer` the worker cannot start (Codex
+  from a Claude worker, for example): start that reviewer as a separate,
+  read-only Orca worker on the worker's branch and head SHA, give it the
+  gate's inputs as the `pr` skill lists them, and send its findings to the
+  implementing worker as that gate's result.
+- `실패`: send the fixes from the verdict's diagnosis to the worker, then wait
+  for a new verdict.
+- `미완료`: wait for the worker to rerun the `pr` skill's wait; if it stays
+  pending, report the pending gate. Never manufacture a completion signal.
+- `검증 신호 없음`: nothing was verified. Do not merge on your own; once the
+  rest of step 5 is clear, give the user the PR URL and SHA and ask whether
+  to merge.
 
-Interpret the automatic Codex review on the PR:
-
-```text
-👀 on the automatic review item → review is still running; wait
-👍 → review completed with no blocking finding
-Neither 👀 nor 👍 on the automatic review item → Codex posted a separate review; fetch and read it before deciding
-```
-
-- A separate Codex review is a pass only when it reports no blocking issue for
-  the current head SHA. The absence of reactions alone is never a pass. If the
-  review contains findings, send fixes to a worker and wait for the automatic
-  review of the new SHA.
-- Never post `@codex review`, call a review-triggering API, or otherwise start
-  Codex review manually. Opening or updating the PR starts the configured
-  automatic review.
-- If no automatic completion signal appears, do not manufacture one and do not
-  merge. Report the pending gate.
-
-React Doctor and Codex are the minimum floor, not an instruction to ignore
-failed required CI, unresolved review findings, merge conflicts, unmet
-requirements, or user-requested validation. A material risk is any security,
-authorization, data-loss, or money-handling concern found in the diff or
-reviews.
+The verdict is the minimum floor, not an instruction to ignore unresolved
+review findings, merge conflicts, unmet requirements, or user-requested
+validation. Those block merge in every project, whatever the gate set. A
+material risk is any security, authorization, data-loss, or money-handling
+concern found in the diff or reviews.
 
 ### 5. Decide Whether to Merge
 
@@ -140,19 +161,24 @@ Use this decision tree:
 Is the PR head SHA unchanged since validation?
 ├── No → invalidate prior gates and wait for current-SHA results
 └── Yes
-    ├── React Doctor passed?
-    │   └── No → do not merge
-    ├── Automatic Codex review passed?
-    │   └── No or still 👀 → do not merge
-    ├── Any required CI failure, unresolved finding, conflict, unmet requirement, or material risk?
+    ├── `pr` verdict for this SHA?
+    │   ├── `실패`, `미완료`, or none → do not merge
+    │   └── `통과` or `검증 신호 없음` → continue
+    ├── Any unresolved finding, conflict, unmet requirement, or material risk?
     │   └── Yes → do not merge; send a fix to a worker or report the blocker
-    └── No → the coordinator may merge
+    ├── Verdict was `검증 신호 없음`?
+    │   └── Yes → ask the user; merge only on explicit approval for this SHA
+    └── Otherwise → the coordinator may merge
 ```
 
-Passing the minimum gates permits merge consideration; it never forces a merge.
+A `통과` verdict permits merge consideration; it never forces a merge.
 
 Merge with `gh pr merge <number> --squash --delete-branch`. After merging,
 verify the PR state and merge commit, then tear the workspace down (step 6).
+The worker's worktree still has the branch checked out, so the command may
+exit non-zero only because local branch deletion failed. Confirm the merged
+state with `gh pr view <number> --json state,mergeCommit` instead of retrying
+the merge; the worktree removal in step 6 releases the branch.
 
 ### 6. Hand Off, Then Leave Nothing Behind
 
@@ -203,5 +229,5 @@ incident above. Stagger them or tell the user when the ticket set calls for
 more.
 
 Report per ticket: the workspace and whether it was removed, PR, merged or
-withheld decision, exact SHA, React Doctor result, Codex review signal, what
-was handed off, and any remaining risk.
+withheld decision, exact SHA, the `pr` verdict and each gate's result, what was
+handed off, and any remaining risk.

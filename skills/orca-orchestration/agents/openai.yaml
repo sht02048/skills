@@ -1,4 +1,4 @@
 interface:
   display_name: "Orca Orchestration"
-  short_description: "티켓별 Orca 워크트리에서 구현·PR 머지를 지휘하고 끝나면 깨끗하게 정리합니다"
-  default_prompt: "Use $orca-orchestration to implement these tickets in Orca worker worktrees, merge each PR after React Doctor and Codex review pass, and tear down each merged worktree."
+  short_description: "티켓별 Orca 워크트리에서 구현을 지휘하고, $pr 판정이 통과한 PR(검증 신호가 없으면 사용자 승인 후)을 머지한 뒤 깨끗하게 정리합니다"
+  default_prompt: "Use $orca-orchestration to implement these tickets in Orca worker worktrees, merge each PR once its $pr verdict passes (or the user approves a PR with no verification signal), and tear down each merged worktree."
