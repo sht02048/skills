@@ -27,7 +27,7 @@ npx skills add sht02048/skills --global --agent claude-code --skill '*' --yes
 | 스킬 | 하는 일 | 이렇게 말하면 |
 | --- | --- | --- |
 | `commit` | staged 변경을 먼저 존중하고, 없으면 관심사별로 나눠 한국어 gitmoji 커밋을 만들어요. `git add .`이나 `--no-verify`는 쓰지 않아요. | "커밋", "나눠서 커밋" |
-| `pr` | 베이스 브랜치를 확인하고 PR 템플릿을 지켜 GitHub PR을 올린 뒤, CI와 자동 Codex 리뷰가 끝날 때까지 기다려요. | "PR 올려줘" |
+| `pr` | 베이스 브랜치를 확인하고 PR 템플릿을 지켜 GitHub PR을 올린 뒤, 프로젝트가 고른 검증 게이트(React Doctor 같은 명령, 독립 에이전트 리뷰, CI, 자동 Codex 리뷰)로 head SHA 기준 판정을 내려요. 게이트는 말로 추가하거나 바꿀 수 있어요. | "PR 올려줘", "PR 게이트 추가" |
 | `pr-review-diagnosis` | 현재 브랜치 PR의 리뷰 스레드를 분류하고, 최신 커밋에서 어떤 체크가 왜 실패했는지 알려줘요. | "PR 리뷰 봐줘", "CI 왜 실패했어" |
 
 ### 전달
