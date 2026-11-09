@@ -57,9 +57,10 @@ head SHA. This skill never restates those rules; it consumes the verdict.
 
 ## Non-Negotiable Ownership
 
-- Give every requirement or ticket its own Orca worker workspace. Let the
-  worker start create it, as the Orca guide describes; do not reuse the
-  coordinator checkout for worker edits.
+- Give every requirement or ticket its own Orca worker workspace, created as
+  a child of the coordinator's workspace (see step 1). Let the worker start
+  create it, as the Orca guide describes; do not reuse the coordinator
+  checkout for worker edits.
 - Only tracked Orca workers count as orchestration. A terminal prompt without
   an Orca Task and Dispatch is not orchestration, and must never be described
   as such.
@@ -78,11 +79,21 @@ head SHA. This skill never restates those rules; it consumes the verdict.
 ### 1. Start the Workers
 
 Start one worker per ticket with a self-contained task spec (see step 2).
-Independent tickets get a new top-level workspace from the repository default
-base and may run in parallel. When tickets declare blocking edges (as
-to-tickets output does), respect them: start a blocked ticket only after the
-tickets it depends on are merged, or stack it on the parent branch when the
-user asked for that. Then end the turn and let Orca wake the coordinator, as
+Every worker workspace this skill creates, including config and reviewer
+workers, is a child of the coordinator's workspace (`new-child` in the Orca
+guide), so the whole delivery nests under the coordinator in Orca's sidebar.
+Never start one top-level or with no parent.
+
+Child placement sets only Orca's lineage, not the Git base. Pass the base
+explicitly: the repository default base for an independent ticket, the parent
+ticket's branch when stacking, and the implementing worker's branch for a
+reviewer worker. Never let it default to the coordinator's own branch, which
+would leak the coordinator's state into every ticket PR.
+
+Independent tickets may run in parallel. When tickets declare blocking edges
+(as to-tickets output does), respect them: start a blocked ticket only after
+the tickets it depends on are merged, or stack it on the parent branch when
+the user asked for that. Then end the turn and let Orca wake the coordinator, as
 the guide requires.
 
 Parallel workers share nothing but the repository. Keep their file ownership
