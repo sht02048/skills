@@ -112,6 +112,12 @@ The worker's spec must include:
   (or that none are needed), so the worker never stops on a question the
   coordinator already settled; after any later commit (a review fix, for example), rerun the
   `pr` skill so it re-verifies the existing PR for the new head SHA;
+- a status header on every message the worker sends the coordinator, whether
+  a question, a blocker, or the final report: ticket, current stage
+  (implementing, validating, PR open, fixing review, done), branch, PR URL
+  and head SHA once they exist, and what it is waiting on. The coordinator
+  builds its status report (step 3) from these, so a bare question with no
+  state is not enough;
 - cleanup of the worker's own temporary state before it reports: scratchpad
   repository copies, build output, and any dev server or daemon it started,
   keeping only reports and tools another ticket needs (see step 6 for why);
@@ -124,6 +130,34 @@ The worker's spec must include:
 - Act on each message Orca wakes the coordinator with. Answer worker
   questions with evidence and judgment; ask the user when the answer does not
   follow from the ticket or their instructions.
+- Every time a worker message wakes the coordinator, give the user a status
+  report for the whole delivery before ending the turn, not only the news
+  from that one worker. Write it as a two-column table, ticket and status,
+  covering every ticket in the run including those not started yet:
+
+  ```text
+  | 티켓                                  | 상태                             |
+  | ------------------------------------- | -------------------------------- |
+  | 01, 02, 03, 04, 05                    | 끝났어요                         |
+  | 06 입력창·상단 바·연결 상태·대화 목록 | 최신 브랜치 위로 옮기는 중이에요 |
+  | 07 묶음 승인                          | 진행 중                          |
+  | 테스트 순서 문제 고치기               | 방법을 정했고 진행 중이에요      |
+  | 08, 09 전환                           | 06, 07을 기다려요                |
+  | 10 옛 화면 삭제                       | 08, 09를 기다려요                |
+  ```
+
+  Keep it readable at a glance: put tickets that share a status in one row,
+  name a ticket by its number and a short title (finished ones by number
+  only), list work that has no ticket number (a follow-up fix, a config
+  worker) by what it does, and order rows finished, in progress, waiting.
+  Write each status as one short plain phrase in the user's language that
+  says what is happening or which tickets it waits on. Keep workspace names,
+  SHAs, and gate results out of the table; they belong in the per-ticket
+  final report. Below the table, say in a line or two what the message
+  changed, what the coordinator did about it, and anything the user must
+  decide. Take the waking worker's row from its status header, and the other
+  rows from each worker's latest message and the state Orca and GitHub
+  report now; never present a state you could not refresh as current.
 - On a defect or failed gate, send the correction to a worker. The coordinator
   must not patch it.
 - Silence or a timeout alone never proves the worker exited. Use the Orca
